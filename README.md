@@ -32,7 +32,7 @@ Installing torch here require a specific version of CUDA (The one above use CUDA
 
 Example:
 
-    python run.py --cuda --model max_sentence_embedding --wiki
+    python run.py --cuda --model max_sentence_embedding --wiki --epochs 20 --early_stops 3
 
 ## How to evaluate trained model (on wiki-727/choi dataset)?
 

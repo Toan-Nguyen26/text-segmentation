@@ -240,6 +240,7 @@ def main(args):
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     if not args.infer:
         best_val_pk = 1.0
+        no_improvement_epochs = 0  
         for j in range(args.epochs):
             train(model, args, j, train_dl, logger, optimizer)
             with (checkpoint_path / 'model{:03d}.t7'.format(j)).open('wb') as f:
@@ -253,8 +254,16 @@ def main(args):
                         'Current best model from epoch {} with p_k {} and threshold {}'.format(j, test_pk, threshold),
                         'green'))
                 best_val_pk = val_pk
+                no_improvement_epochs = 0 
                 with (checkpoint_path / 'best_model.t7'.format(j)).open('wb') as f:
                     torch.save(model, f)
+            else:
+                no_improvement_epochs += 1 
+
+            # Stop if no improvement for 3 consecutive epochs
+            if args.early_stops & no_improvement_epochs >= args.early_stops:
+                print(f"Stopping training after {j + 1} epochs due to no improvement in p_k.")
+                break
 
     else:
         test_dataset = WikipediaDataSet(args.infer, word2vec=word2vec,
@@ -281,5 +290,6 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', help='How many workers to use for data loading', type=int, default=0)
     parser.add_argument('--high_granularity', help='Use high granularity for wikipedia dataset segmentation', action='store_true')
     parser.add_argument('--infer', help='inference_dir', type=str)
+    parser.add_argument('--early_stops', help='Help to stop training early after a certain amounts of epochs does not improt p_k', type=int)
 
     main(parser.parse_args())

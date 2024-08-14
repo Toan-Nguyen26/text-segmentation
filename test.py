@@ -1,20 +1,20 @@
 from pathlib import Path
 import utils
 
-dataset_path = Path('datasets/wikidataset/train')
+# dataset_path = Path('datasets/wikidataset/train')
 
-files = list(dataset_path.glob('*/*/*/*'))
-print(f'Found {len(files)} files.')
+# files = list(dataset_path.glob('*/*/*/*'))
+# print(f'Found {len(files)} files.')
 
 half_dataset_path = Path('datasets/half-wikidataset/train')
 
 helf_files = list(half_dataset_path.glob('*/*/*/*'))
 print(f'Found {len(helf_files)} files.')
 
-dataset_path_test = Path('datasets/wikidataset/test')
+# dataset_path_test = Path('datasets/wikidataset/test')
 
-files = list(dataset_path_test.glob('*/*/*/*'))
-print(f'Found {len(files)} files.')
+# files = list(dataset_path_test.glob('*/*/*/*'))
+# print(f'Found {len(files)} files.')
 
 half_dataset_path_test = Path('datasets/half-wikidataset/test')
 
