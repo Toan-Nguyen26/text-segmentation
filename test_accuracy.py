@@ -57,22 +57,22 @@ def main(args):
         word2vec = None
 
     word2vec_done = timer()
-    print 'Loading word2vec ellapsed: ' + str(word2vec_done - start) + ' seconds'
+    print('Loading word2vec ellapsed: ' + str(word2vec_done - start) + ' seconds')
     dirname = 'test'
 
     if args.wiki:
-        dataset_folders = [Path(utils.config['wikidataset']) / dirname]
+        dataset_folders = [Path(utils.config['half-wikidataset']) / dirname]
         if (args.wiki_folder):
             dataset_folders = []
             dataset_folders.append(args.wiki_folder)
-        print 'running on wikipedia'
+        print('running on wikipedia')
     else:
         if (args.bySegLength):
             dataset_folders = getSegmentsFolders(utils.config['choidataset'])
-            print 'run on choi by segments length'
+            print('run on choi by segments length')
         else :
             dataset_folders = [utils.config['choidataset']]
-            print 'running on Choi'
+            print('running on Choi')
 
 
     with open(args.model, 'rb') as f:
@@ -87,7 +87,7 @@ def main(args):
     for dataset_path in dataset_folders:
 
         if (args.bySegLength):
-            print 'Segment is ',os.path.basename(dataset_path), " :"
+            print('Segment is ',os.path.basename(dataset_path), " :")
 
         if args.wiki:
             if (args.wiki_folder):
@@ -107,6 +107,9 @@ def main(args):
             total_loss = 0
             acc =  accuracy.Accuracy()
 
+            # Add this line at the start of the main function to open a file for writing segment details
+            segment_output_file = open('segment_output.txt', 'w')
+
             for i, (data, targets, paths) in enumerate(dl):
                 if i == args.stop_after:
                     break
@@ -119,6 +122,9 @@ def main(args):
                 output_seg = output_prob[:, 1] > args.seg_threshold
                 target_seg = targets_var.data.cpu().numpy()
                 batch_accurate = (output_seg == target_seg).sum()
+                # print('Output: ' + str(output_seg))
+                # print('Target: ' + str(target_seg))
+                # print('Batch accurate: ' + str(batch_accurate))
                 total_accurate += batch_accurate
                 total_count += len(target_seg)
                 total_loss += batch_loss
@@ -138,12 +144,22 @@ def main(args):
 
                     acc.update(h,t, sentences_length=sentences_length)
 
+                    # Add this block to log or write out the segment details
+                    segment_output_file.write(f'Batch {i}, Document {k}:\n')
+                    segment_output_file.write(f'Segments: {h}\n')
+                    segment_output_file.write(f'Target Segments: {t}\n\n')
+
                     current_target_idx = to_idx
 
                 logger.debug('Batch %s - error %7.4f, Accuracy: %7.4f', i, batch_loss, batch_accurate / len(target_seg))
                 pbar.set_description('Testing, Accuracy={:.4}'.format(batch_accurate / len(target_seg)))
 
+            # Make sure to close the file at the end of the process
+            segment_output_file.close()
+
         average_loss = total_loss / len(dl)
+        # print('Total accurate: ' + str(total_accurate))
+        # print('Total count: ' + str(total_count))
         average_accuracy = total_accurate / total_count
         calculated_pk, _ = acc.calc_accuracy()
 

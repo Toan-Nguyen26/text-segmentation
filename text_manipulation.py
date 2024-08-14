@@ -1,5 +1,4 @@
 import nltk.data
-import exceptions
 import numpy as np
 from nltk.tokenize import RegexpTokenizer
 import wiki_utils
@@ -19,7 +18,7 @@ def get_punkt():
 
     try:
         tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-    except exceptions.LookupError:
+    except LookupError:
         nltk.download('punkt')
         tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
 

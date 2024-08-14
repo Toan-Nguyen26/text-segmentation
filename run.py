@@ -2,7 +2,6 @@ import torch
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 import torch.nn.functional as F
-
 from choiloader import ChoiDataset, collate_fn
 from tqdm import tqdm
 from argparse import ArgumentParser
@@ -86,9 +85,10 @@ def train(model, args, epoch, dataset, logger, optimizer):
                 loss.backward()
 
                 optimizer.step()
-                total_loss += loss.data[0]
+                # total_loss += loss.data[0]
+                total_loss += loss.item()
                 # logger.debug('Batch %s - Train error %7.4f', i, loss.data[0])
-                pbar.set_description('Training, loss={:.4}'.format(loss.data[0]))
+                pbar.set_description('Training, loss={:.4}'.format(loss.item()))
             # except Exception as e:
                 # logger.info('Exception "%s" in batch %s', e, i)
                 # logger.debug('Exception while handling batch with file paths: %s', paths, exc_info=True)
@@ -206,7 +206,7 @@ def main(args):
 
     if not args.infer:
         if args.wiki:
-            dataset_path = Path(utils.config['wikidataset'])
+            dataset_path = Path(utils.config['half-wikidataset'])
             train_dataset = WikipediaDataSet(dataset_path / 'train', word2vec=word2vec,
                                              high_granularity=args.high_granularity)
             dev_dataset = WikipediaDataSet(dataset_path / 'dev', word2vec=word2vec, high_granularity=args.high_granularity)
@@ -261,7 +261,7 @@ def main(args):
                                         high_granularity=args.high_granularity)
         test_dl = DataLoader(test_dataset, batch_size=args.test_bs, collate_fn=collate_fn, shuffle=False,
                              num_workers=args.num_workers)
-        print test(model, args, 0, test_dl, logger, 0.4)
+        print(test(model, args, 0, test_dl, logger, 0.4))
 
 
 if __name__ == '__main__':

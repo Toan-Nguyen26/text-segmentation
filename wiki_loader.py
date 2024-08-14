@@ -30,7 +30,7 @@ def cache_wiki_filenames(wiki_folder):
 
     with cache_file_path.open('w+') as f:
         for file in files:
-            f.write(unicode(file) + u'\n')
+            f.write(str(file) + u'\n')
 
 
 def clean_section(section):
@@ -59,11 +59,12 @@ def get_scections_from_text(txt, high_granularity=True):
 
 def get_sections(path, high_granularity=True):
     file = open(str(path), "r")
-    raw_content = file.read()
+    with open(path, 'r', encoding='utf-8') as file:
+        raw_content = file.read()
     file.close()
 
-    clean_txt = raw_content.decode('utf-8').strip()
-
+    clean_txt = raw_content.strip()
+    # print("Raw content:", raw_content, "Clean text:", clean_txt)
     sections = [clean_section(s) for s in get_scections_from_text(clean_txt, high_granularity)]
 
     return sections
@@ -116,6 +117,8 @@ class WikipediaDataSet(Dataset):
                 cache_path = get_cache_path(root_path)
                 if not cache_path.exists():
                     cache_wiki_filenames(root_path)
+                else:
+                    print('Found cache file: {}'.format(cache_path))
                 self.textfiles = cache_path.read_text().splitlines()
 
         if len(self.textfiles) == 0:

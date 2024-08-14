@@ -99,3 +99,12 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# new folder to ignore
+checkpoints/
+datasets/
+save_model/
+.history/
+runs/
+config.json
+segment_output.txt
