@@ -108,3 +108,5 @@ save_model/
 runs/
 config.json
 segment_output.txt
+my_datasets.zip
+my_datasets

@@ -261,7 +261,7 @@ def main(args):
 
     if not args.infer:
         if args.wiki:
-            dataset_path = Path(utils.config['snippets'])
+            dataset_path = Path(utils.config['half-wikidatasets'])
             train_dataset = WikipediaDataSet(dataset_path / 'train', word2vec=word2vec,
                                              high_granularity=args.high_granularity)
             dev_dataset = WikipediaDataSet(dataset_path / 'dev', word2vec=word2vec, high_granularity=args.high_granularity)
