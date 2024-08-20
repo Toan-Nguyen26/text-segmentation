@@ -16,10 +16,21 @@ from wiki_loader import WikipediaDataSet
 import accuracy
 import numpy as np
 from termcolor import colored
+import logging
 
 torch.multiprocessing.set_sharing_strategy('file_system')
 
 preds_stats = utils.predictions_analysis()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    handlers=[
+                        logging.FileHandler("output.log"),
+                        logging.StreamHandler()  # This will output to the console as well
+                    ])
+
+logger = logging.getLogger()
 
 
 def softmax(x):
@@ -32,6 +43,20 @@ def softmax(x):
 def import_model(model_name):
     module = __import__('models.' + model_name, fromlist=['models'])
     return module.create()
+
+
+def check_empty_data(data, paths, batch_index, logger, error_file='debug_error.txt'):
+    if isinstance(data, list) and len(data) == 0:
+        logger.warning(f"Empty data in batch {batch_index}, paths: {paths}")
+        with open(error_file, 'a') as ef:
+            ef.write(f"Batch {batch_index}\nPaths: {paths}\nError: Empty data\n\n")
+        return True
+    elif isinstance(data, torch.Tensor) and data.numel() == 0:
+        logger.warning(f"Empty tensor in batch {batch_index}, paths: {paths}")
+        with open(error_file, 'a') as ef:
+            ef.write(f"Batch {batch_index}\nPaths: {paths}\nError: Empty tensor\n\n")
+        return True
+    return False
 
 
 class Accuracies(object):
@@ -76,10 +101,18 @@ def train(model, args, epoch, dataset, logger, optimizer):
             if True:
                 if i == args.stop_after:
                     break
-
                 pbar.update()
+                if check_empty_data(data, paths, i, logger):
+                    continue
                 model.zero_grad()
-                output = model(data)
+                try:
+                    output = model(data)
+                except RuntimeError as e:
+                    if 'Length of all samples has to be greater than 0' in str(e):
+                        logger.warning(f"Skipping batch due to empty sequence. Error: {str(e)}")
+                        continue
+                    else:
+                        raise e  
                 target_var = Variable(maybe_cuda(torch.cat(target, 0), args.cuda), requires_grad=False)
                 loss = model.criterion(output, target_var)
                 loss.backward()
@@ -90,9 +123,9 @@ def train(model, args, epoch, dataset, logger, optimizer):
                 # logger.debug('Batch %s - Train error %7.4f', i, loss.data[0])
                 pbar.set_description('Training, loss={:.4}'.format(loss.item()))
             # except Exception as e:
-                # logger.info('Exception "%s" in batch %s', e, i)
-                # logger.debug('Exception while handling batch with file paths: %s', paths, exc_info=True)
-                # pass
+            #     logger.info('Exception "%s" in batch %s', e, i)
+            #     logger.debug('Exception while handling batch with file paths: %s', paths, exc_info=True)
+            #     pass
 
     total_loss = total_loss / len(dataset)
     logger.debug('Training Epoch: {}, Loss: {:.4}.'.format(epoch + 1, total_loss))
@@ -108,7 +141,17 @@ def validate(model, args, epoch, dataset, logger):
                 if i == args.stop_after:
                     break
                 pbar.update()
-                output = model(data)
+                if check_empty_data(data, paths, i, logger):
+                    continue
+                try:
+                    output = model(data)
+                except RuntimeError as e:
+                    if 'Length of all samples has to be greater than 0' in str(e):
+                        logger.warning(f"Skipping batch due to empty sequence. Error: {str(e)}")
+                        continue
+                    else:
+                        raise e  
+
                 output_softmax = F.softmax(output, 1)
                 targets_var = Variable(maybe_cuda(torch.cat(target, 0), args.cuda), requires_grad=False)
 
@@ -120,8 +163,10 @@ def validate(model, args, epoch, dataset, logger):
 
 
             # except Exception as e:
-            #     # logger.info('Exception "%s" in batch %s', e, i)
-            #     logger.debug('Exception while handling batch with file paths: %s', paths, exc_info=True)
+            #     logger.error(f'Exception "{e}" in batch {i} with file paths: {paths}', exc_info=True)
+            #     # Optionally, write more detailed debug info
+            #     with open('debug_error.txt', 'a') as error_file:
+            #         error_file.write(f"Batch {i}\nPaths: {paths}\nError: {e}\n\n")
             #     pass
 
         epoch_pk, epoch_windiff, threshold = acc.calc_accuracy()
@@ -145,7 +190,17 @@ def test(model, args, epoch, dataset, logger, threshold):
                 if i == args.stop_after:
                     break
                 pbar.update()
-                output = model(data)
+                if check_empty_data(data, paths, i, logger):
+                    continue
+                try:
+                    output = model(data)
+                except RuntimeError as e:
+                    if 'Length of all samples has to be greater than 0' in str(e):
+                        logger.warning(f"Skipping batch due to empty sequence. Error: {str(e)}")
+                        continue
+                    else:
+                        raise e  
+
                 output_softmax = F.softmax(output, 1)
                 targets_var = Variable(maybe_cuda(torch.cat(target, 0), args.cuda), requires_grad=False)
                 output_seg = output.data.cpu().numpy().argmax(axis=1)
@@ -206,7 +261,7 @@ def main(args):
 
     if not args.infer:
         if args.wiki:
-            dataset_path = Path(utils.config['half-wikidataset'])
+            dataset_path = Path(utils.config['snippets'])
             train_dataset = WikipediaDataSet(dataset_path / 'train', word2vec=word2vec,
                                              high_granularity=args.high_granularity)
             dev_dataset = WikipediaDataSet(dataset_path / 'dev', word2vec=word2vec, high_granularity=args.high_granularity)

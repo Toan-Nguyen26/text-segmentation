@@ -10,6 +10,7 @@ jsondata = {
       "wiki-test-50k": "./datasets/wiki_test_50",
       "wikidataset": "./datasets/wikidataset",
       "half-wikidataset": "./datasets/half-wikidataset",
+      "snippets": "./datasets/snippets",
 }
 
 with open('config.json', 'w') as f:

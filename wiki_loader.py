@@ -2,6 +2,7 @@ from torch.utils.data import Dataset
 from text_manipulation import word_model
 from text_manipulation import extract_sentence_words
 from pathlib2 import Path
+import logging
 import re
 import wiki_utils
 import os
@@ -12,6 +13,13 @@ logger = utils.setup_logger(__name__, 'train.log')
 
 section_delimiter = "========"
 
+# Configure logging
+logging.basicConfig(filename='logger.txt', 
+                    filemode='w',  # 'w' to overwrite each time; use 'a' to append
+                    format='%(asctime)s - %(levelname)s - %(message)s', 
+                    level=logging.INFO)
+
+logger = logging.getLogger()
 
 def get_files(path):
     all_objects = Path(path).glob('**/*')
@@ -59,13 +67,21 @@ def get_scections_from_text(txt, high_granularity=True):
 
 def get_sections(path, high_granularity=True):
     file = open(str(path), "r")
+    # with open(path, 'r', encoding='utf-8') as file:
+    #     raw_content = file.read()
+    # file.close()
+
     with open(path, 'r', encoding='utf-8') as file:
         raw_content = file.read()
     file.close()
-
     clean_txt = raw_content.strip()
     # print("Raw content:", raw_content, "Clean text:", clean_txt)
     sections = [clean_section(s) for s in get_scections_from_text(clean_txt, high_granularity)]
+
+    # Debugging Information
+    logger.info(f"File: {path}, Number of sections: {len(sections)}")
+    for i, section in enumerate(sections):
+        logger.info(f"Section {i+1} length: {len(section)}")
 
     return sections
 
@@ -100,7 +116,6 @@ def read_wiki_file(path, word2vec, remove_preface_segment=True, ignore_list=Fals
                         data.append(sentence)
             if data:
                 targets.append(len(data) - 1)
-
     return data, targets, path
 
 
