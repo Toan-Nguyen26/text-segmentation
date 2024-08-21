@@ -277,11 +277,11 @@ def main(args):
             test_dataset = ChoiDataset(dataset_path, word2vec)
 
         train_dl = DataLoader(train_dataset, batch_size=args.bs, collate_fn=collate_fn, shuffle=True,
-                              num_workers=args.num_workers)
+                              num_workers=args.num_workers, pin_memory=True)
         dev_dl = DataLoader(dev_dataset, batch_size=args.test_bs, collate_fn=collate_fn, shuffle=False,
-                            num_workers=args.num_workers)
+                            num_workers=args.num_workers, pin_memory=True)
         test_dl = DataLoader(test_dataset, batch_size=args.test_bs, collate_fn=collate_fn, shuffle=False,
-                             num_workers=args.num_workers)
+                             num_workers=args.num_workers, pin_memory=True)
 
     assert bool(args.model) ^ bool(args.load_from)  # exactly one of them must be set
 

@@ -40,10 +40,12 @@ class SentenceEncodingRNN(nn.Module):
         packed_output, _ = self.lstm(x, s)
         padded_output, lengths = pad_packed_sequence(packed_output) # (max sentence len, batch, 256) 
 
-        maxes = Variable(maybe_cuda(torch.zeros(batch_size, padded_output.size(2))))
-        for i in range(batch_size):
-            maxes[i, :] = torch.max(padded_output[:lengths[i], i, :], 0)[0]
-
+        # maxes = Variable(maybe_cuda(torch.zeros(batch_size, padded_output.size(2))))
+        # for i in range(batch_size):
+        #     maxes[i, :] = torch.max(padded_output[:lengths[i], i, :], 0)[0]
+        
+        maxes, _ = torch.max(padded_output, dim=0)
+        
         return maxes
 
 
