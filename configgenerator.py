@@ -14,7 +14,7 @@ jsondata = {
     #   "half-wikidataset": "./datasets/half-wikidataset",
     #   "snippets": "./datasets/snippets",
 
-       # Ruunning on VSCode
+       # Ruunning on colab
       "word2vecfile": "./my_datasets/GoogleNews-vectors-negative300.bin",
       "wiki-test-50k": "./my_datasets/wiki_test_50",
       "wikidataset": "./my_datasets/wikidataset",
