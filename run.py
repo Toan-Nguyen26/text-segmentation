@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 import torch.nn.functional as F
+import multiprocessing
 from choiloader import ChoiDataset, collate_fn
 from tqdm import tqdm
 from argparse import ArgumentParser
@@ -242,7 +243,7 @@ def test(model, args, epoch, dataset, logger, threshold):
 
 def main(args):
     sys.path.append(str(Path(__file__).parent))
-    multiprocessing.set_start_method('spawn')
+    # multiprocessing.set_start_method('spawn')
     checkpoint_path = Path(args.checkpoint_dir)
     checkpoint_path.mkdir(exist_ok=True)
 
