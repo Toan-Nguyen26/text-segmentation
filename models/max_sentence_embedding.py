@@ -39,13 +39,29 @@ class SentenceEncodingRNN(nn.Module):
         s = zero_state(self, batch_size)
         packed_output, _ = self.lstm(x, s)
         padded_output, lengths = pad_packed_sequence(packed_output) # (max sentence len, batch, 256) 
-
         # maxes = Variable(maybe_cuda(torch.zeros(batch_size, padded_output.size(2))))
         # for i in range(batch_size):
         #     maxes[i, :] = torch.max(padded_output[:lengths[i], i, :], 0)[0]
-        
-        maxes, _ = torch.max(padded_output, dim=0)
-        
+        # print("old_maxes: ", maxes.size())
+        # print("old_maxes: ", maxes)
+
+        # Determine the device of the padded_output
+        device = padded_output.device
+
+        # Ensure lengths tensor is on the same device as padded_output
+        lengths = lengths.to(device)
+
+        # Create a mask to exclude padding, ensuring it's on the same device
+        mask = torch.arange(padded_output.size(0), device=device).unsqueeze(1).expand_as(padded_output[:, :, 0])
+        mask = mask < lengths.unsqueeze(0)
+
+        # Apply the mask to exclude padding
+        masked_padded_output = padded_output.masked_fill(~mask.unsqueeze(2), float('-inf'))
+
+        # Now compute the max, excluding padding
+        maxes, _ = torch.max(masked_padded_output, dim=0)
+        # print("maxes: ", maxes.size())
+        # print("maxes: ", maxes)
         return maxes
 
 

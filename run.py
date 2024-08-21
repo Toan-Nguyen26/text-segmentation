@@ -263,13 +263,11 @@ def main(args):
     if not args.infer:
         if args.wiki:
             dataset_path = Path(utils.config['half-wikidataset'])
-            train_dataset = InMemoryWikipediaDataSet(dataset_path / 'train', word2vec=word2vec,
+            train_dataset = WikipediaDataSet(dataset_path / 'train', word2vec=word2vec,
                                              high_granularity=args.high_granularity)
-            dev_dataset = InMemoryWikipediaDataSet(dataset_path / 'dev', word2vec=word2vec, high_granularity=args.high_granularity)
-            test_dataset = InMemoryWikipediaDataSet(dataset_path / 'test', word2vec=word2vec,
+            dev_dataset = WikipediaDataSet(dataset_path / 'dev', word2vec=word2vec, high_granularity=args.high_granularity)
+            test_dataset = WikipediaDataSet(dataset_path / 'test', word2vec=word2vec,
                                             high_granularity=args.high_granularity)
-            print(train_dataset[0])
-            print(train_dataset)
         else:
             dataset_path = utils.config['choidataset']
             train_dataset = ChoiDataset(dataset_path, word2vec)
