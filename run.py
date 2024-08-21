@@ -45,18 +45,18 @@ def import_model(model_name):
     return module.create()
 
 
-def check_empty_data(data, paths, batch_index, logger, error_file='debug_error.txt'):
-    if isinstance(data, list) and len(data) == 0:
-        logger.warning(f"Empty data in batch {batch_index}, paths: {paths}")
-        with open(error_file, 'a') as ef:
-            ef.write(f"Batch {batch_index}\nPaths: {paths}\nError: Empty data\n\n")
-        return True
-    elif isinstance(data, torch.Tensor) and data.numel() == 0:
-        logger.warning(f"Empty tensor in batch {batch_index}, paths: {paths}")
-        with open(error_file, 'a') as ef:
-            ef.write(f"Batch {batch_index}\nPaths: {paths}\nError: Empty tensor\n\n")
-        return True
-    return False
+# def check_empty_data(data, paths, batch_index, logger, error_file='debug_error.txt'):
+#     if isinstance(data, list) and len(data) == 0:
+#         logger.warning(f"Empty data in batch {batch_index}, paths: {paths}")
+#         with open(error_file, 'a') as ef:
+#             ef.write(f"Batch {batch_index}\nPaths: {paths}\nError: Empty data\n\n")
+#         return True
+#     elif isinstance(data, torch.Tensor) and data.numel() == 0:
+#         logger.warning(f"Empty tensor in batch {batch_index}, paths: {paths}")
+#         with open(error_file, 'a') as ef:
+#             ef.write(f"Batch {batch_index}\nPaths: {paths}\nError: Empty tensor\n\n")
+#         return True
+#     return False
 
 
 class Accuracies(object):
@@ -104,7 +104,7 @@ def train(model, args, epoch, dataset, logger, optimizer):
                 pbar.update()
                 # if check_empty_data(data, paths, i, logger):
                 #     continue
-                model.zero_grad()
+                # model.zero_grad()
                 try:
                     output = model(data)
                 except RuntimeError as e:
@@ -192,7 +192,7 @@ def test(model, args, epoch, dataset, logger, threshold):
                 pbar.update()
                 # if check_empty_data(data, paths, i, logger):
                 #     continue
-                try:
+                # try:
                     output = model(data)
                 except RuntimeError as e:
                     if 'Length of all samples has to be greater than 0' in str(e):
@@ -242,7 +242,7 @@ def test(model, args, epoch, dataset, logger, threshold):
 
 def main(args):
     sys.path.append(str(Path(__file__).parent))
-
+    multiprocessing.set_start_method('spawn')
     checkpoint_path = Path(args.checkpoint_dir)
     checkpoint_path.mkdir(exist_ok=True)
 
