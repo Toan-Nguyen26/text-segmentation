@@ -151,3 +151,27 @@ class WikipediaDataSet(Dataset):
 
     def __len__(self):
         return len(self.textfiles)
+
+class InMemoryWikipediaDataSet(WikipediaDataSet):
+    def __init__(self, root, word2vec, train=True, manifesto=False, folder=False, high_granularity=False):
+        # Initialize the parent class to handle file paths and configurations
+        super().__init__(root, word2vec, train, manifesto, folder, high_granularity)
+        
+        self.data = []
+        self.targets = []
+        self.paths = []
+        
+        # Preload all data into memory
+        for path in self.textfiles:
+            data, target, path = read_wiki_file(Path(path), self.word2vec, ignore_list=True, remove_special_tokens=True,
+                                                high_granularity=self.high_granularity)
+            self.data.append(data)
+            self.targets.append(target)
+            self.paths.append(path)
+
+    def __getitem__(self, index):
+        # Return preloaded data and target from memory
+        return self.data[index], self.targets[index], self.paths[index]
+
+    def __len__(self):
+        return len(self.data)

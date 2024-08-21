@@ -13,7 +13,7 @@ from tensorboard_logger import configure, log_value
 import os
 import sys
 from pathlib2 import Path
-from wiki_loader import WikipediaDataSet
+from wiki_loader import WikipediaDataSet, InMemoryWikipediaDataSet
 import accuracy
 import numpy as np
 from termcolor import colored
@@ -193,7 +193,7 @@ def test(model, args, epoch, dataset, logger, threshold):
                 pbar.update()
                 # if check_empty_data(data, paths, i, logger):
                 #     continue
-                # try:
+                try:
                     output = model(data)
                 except RuntimeError as e:
                     if 'Length of all samples has to be greater than 0' in str(e):
@@ -263,12 +263,13 @@ def main(args):
     if not args.infer:
         if args.wiki:
             dataset_path = Path(utils.config['half-wikidataset'])
-            train_dataset = WikipediaDataSet(dataset_path / 'train', word2vec=word2vec,
+            train_dataset = InMemoryWikipediaDataSet(dataset_path / 'train', word2vec=word2vec,
                                              high_granularity=args.high_granularity)
-            dev_dataset = WikipediaDataSet(dataset_path / 'dev', word2vec=word2vec, high_granularity=args.high_granularity)
-            test_dataset = WikipediaDataSet(dataset_path / 'test', word2vec=word2vec,
+            dev_dataset = InMemoryWikipediaDataSet(dataset_path / 'dev', word2vec=word2vec, high_granularity=args.high_granularity)
+            test_dataset = InMemoryWikipediaDataSet(dataset_path / 'test', word2vec=word2vec,
                                             high_granularity=args.high_granularity)
-
+            print(train_dataset[0])
+            print(train_dataset)
         else:
             dataset_path = utils.config['choidataset']
             train_dataset = ChoiDataset(dataset_path, word2vec)
