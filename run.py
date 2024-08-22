@@ -105,7 +105,7 @@ def train(model, args, epoch, dataset, logger, optimizer):
                 pbar.update()
                 # if check_empty_data(data, paths, i, logger):
                 #     continue
-                # model.zero_grad()
+                model.zero_grad()
                 try:
                     output = model(data)
                 except RuntimeError as e:
@@ -116,6 +116,11 @@ def train(model, args, epoch, dataset, logger, optimizer):
                         raise e  
                 target_var = Variable(maybe_cuda(torch.cat(target, 0), args.cuda), requires_grad=False)
                 loss = model.criterion(output, target_var)
+
+                if torch.isnan(loss):
+                    logger.error("Loss became NaN, resetting the model/optimizer or skipping the batch.")
+                    # Optional: Reset model/optimizer state here
+                    continue
                 loss.backward()
 
                 optimizer.step()
