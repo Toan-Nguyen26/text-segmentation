@@ -108,26 +108,26 @@ def train(model, args, epoch, dataset, logger, optimizer):
                 model.zero_grad()
                 try:
                     output = model(data)
+                    target_var = Variable(maybe_cuda(torch.cat(target, 0), args.cuda), requires_grad=False)
+                    loss = model.criterion(output, target_var)
+                    optimizer.step()
+                    # total_loss += loss.data[0]
+                    total_loss += loss.item()
+                    # logger.debug('Batch %s - Train error %7.4f', i, loss.data[0])
+                    pbar.set_description('Training, loss={:.4}'.format(loss.item()))
                 except RuntimeError as e:
                     if 'Length of all samples has to be greater than 0' in str(e):
                         logger.warning(f"Skipping batch due to empty sequence. Error: {str(e)}")
                         continue
                     else:
                         raise e  
-                target_var = Variable(maybe_cuda(torch.cat(target, 0), args.cuda), requires_grad=False)
-                loss = model.criterion(output, target_var)
 
-                if torch.isnan(loss):
-                    logger.error("Loss became NaN, resetting the model/optimizer or skipping the batch.")
-                    # Optional: Reset model/optimizer state here
-                    continue
-                loss.backward()
+                # if torch.isnan(loss):
+                #     logger.error("Loss became NaN, resetting the model/optimizer or skipping the batch.")
+                #     # Optional: Reset model/optimizer state here
+                #     continue
+                # loss.backward()
 
-                optimizer.step()
-                # total_loss += loss.data[0]
-                total_loss += loss.item()
-                # logger.debug('Batch %s - Train error %7.4f', i, loss.data[0])
-                pbar.set_description('Training, loss={:.4}'.format(loss.item()))
             # except Exception as e:
             #     logger.info('Exception "%s" in batch %s', e, i)
             #     logger.debug('Exception while handling batch with file paths: %s', paths, exc_info=True)
@@ -151,21 +151,20 @@ def validate(model, args, epoch, dataset, logger):
                 #     continue
                 try:
                     output = model(data)
+                    output_softmax = F.softmax(output, 1)
+                    targets_var = Variable(maybe_cuda(torch.cat(target, 0), args.cuda), requires_grad=False)
+
+                    output_seg = output.data.cpu().numpy().argmax(axis=1)
+                    target_seg = targets_var.data.cpu().numpy()
+                    preds_stats.add(output_seg, target_seg)
+
+                    acc.update(output_softmax.data.cpu().numpy(), target)
                 except RuntimeError as e:
                     if 'Length of all samples has to be greater than 0' in str(e):
                         logger.warning(f"Skipping batch due to empty sequence. Error: {str(e)}")
                         continue
                     else:
                         raise e  
-
-                output_softmax = F.softmax(output, 1)
-                targets_var = Variable(maybe_cuda(torch.cat(target, 0), args.cuda), requires_grad=False)
-
-                output_seg = output.data.cpu().numpy().argmax(axis=1)
-                target_seg = targets_var.data.cpu().numpy()
-                preds_stats.add(output_seg, target_seg)
-
-                acc.update(output_softmax.data.cpu().numpy(), target)
 
 
             # except Exception as e:
@@ -200,33 +199,32 @@ def test(model, args, epoch, dataset, logger, threshold):
                 #     continue
                 try:
                     output = model(data)
+                    output_softmax = F.softmax(output, 1)
+                    targets_var = Variable(maybe_cuda(torch.cat(target, 0), args.cuda), requires_grad=False)
+                    output_seg = output.data.cpu().numpy().argmax(axis=1)
+                    target_seg = targets_var.data.cpu().numpy()
+                    preds_stats.add(output_seg, target_seg)
+
+                    current_idx = 0
+
+                    for k, t in enumerate(target):
+                        document_sentence_count = len(t)
+                        to_idx = int(current_idx + document_sentence_count)
+
+                        output = ((output_softmax.data.cpu().numpy()[current_idx: to_idx, :])[:, 1] > threshold)
+                        h = np.append(output, [1])
+                        tt = np.append(t, [1])
+
+                        acc.update(h, tt)
+
+                        current_idx = to_idx
+
                 except RuntimeError as e:
                     if 'Length of all samples has to be greater than 0' in str(e):
                         logger.warning(f"Skipping batch due to empty sequence. Error: {str(e)}")
                         continue
                     else:
                         raise e  
-
-                output_softmax = F.softmax(output, 1)
-                targets_var = Variable(maybe_cuda(torch.cat(target, 0), args.cuda), requires_grad=False)
-                output_seg = output.data.cpu().numpy().argmax(axis=1)
-                target_seg = targets_var.data.cpu().numpy()
-                preds_stats.add(output_seg, target_seg)
-
-                current_idx = 0
-
-                for k, t in enumerate(target):
-                    document_sentence_count = len(t)
-                    to_idx = int(current_idx + document_sentence_count)
-
-                    output = ((output_softmax.data.cpu().numpy()[current_idx: to_idx, :])[:, 1] > threshold)
-                    h = np.append(output, [1])
-                    tt = np.append(t, [1])
-
-                    acc.update(h, tt)
-
-                    current_idx = to_idx
-
                     # acc.update(output_softmax.data.cpu().numpy(), target)
 
             #

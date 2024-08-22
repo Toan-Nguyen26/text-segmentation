@@ -128,18 +128,18 @@ class Model(nn.Module):
         sorted_lengths = [s.size()[0] for s in sorted_sentences]
 
         # Filter out zero-length sentences
-        non_zero_lengths = np.array(sorted_lengths) > 0
-        if not non_zero_lengths.all():
-            print(f"Found zero-length sentences in batch: {batch}")
-            logger.warning("Found zero-length sentences, filtering them out.")
-            sorted_sentences = [sorted_sentences[i] for i in range(len(sorted_sentences)) if non_zero_lengths[i]]
-            sorted_lengths = [sorted_lengths[i] for i in range(len(sorted_lengths)) if non_zero_lengths[i]]
+        # non_zero_lengths = np.array(sorted_lengths) > 0
+        # if not non_zero_lengths.all():
+        #     print(f"Found zero-length sentences in batch: {batch}")
+        #     logger.warning("Found zero-length sentences, filtering them out.")
+        #     sorted_sentences = [sorted_sentences[i] for i in range(len(sorted_sentences)) if non_zero_lengths[i]]
+        #     sorted_lengths = [sorted_lengths[i] for i in range(len(sorted_lengths)) if non_zero_lengths[i]]
 
-        if len(sorted_lengths) == 0:
-            raise RuntimeError("All sequences in this batch are of length zero.")
+        # if len(sorted_lengths) == 0:
+        #     raise RuntimeError("All sequences in this batch are of length zero.")
 
-        max_length = max(sorted_lengths)
-        # max_length = max(lengths)
+        # max_length = max(sorted_lengths)
+        max_length = max(lengths)
         logger.debug('Num sentences: %s, max sentence length: %s', 
                      sum(sentences_per_doc), max_length)
 
@@ -160,15 +160,15 @@ class Model(nn.Module):
         doc_sizes = [doc.size()[0] for doc in encoded_documents]
 
         # Filter out zero-length documents
-        non_zero_doc_sizes = np.array(doc_sizes) > 0
-        if not non_zero_doc_sizes.all():
-            print(f"Found zero-length documents in batch: {batch}")
-            logger.warning("Found zero-length documents, filtering them out.")
-            encoded_documents = [encoded_documents[i] for i in range(len(encoded_documents)) if non_zero_doc_sizes[i]]
-            doc_sizes = [doc_sizes[i] for i in range(len(doc_sizes)) if non_zero_doc_sizes[i]]
+        # non_zero_doc_sizes = np.array(doc_sizes) > 0
+        # if not non_zero_doc_sizes.all():
+        #     print(f"Found zero-length documents in batch: {batch}")
+        #     logger.warning("Found zero-length documents, filtering them out.")
+        #     encoded_documents = [encoded_documents[i] for i in range(len(encoded_documents)) if non_zero_doc_sizes[i]]
+        #     doc_sizes = [doc_sizes[i] for i in range(len(doc_sizes)) if non_zero_doc_sizes[i]]
 
-        if len(doc_sizes) == 0:
-            raise RuntimeError("All documents in this batch are of length zero.")
+        # if len(doc_sizes) == 0:
+        #     raise RuntimeError("All documents in this batch are of length zero.")
 
         max_doc_size = np.max(doc_sizes)
         ordered_document_idx = np.argsort(doc_sizes)[::-1]
