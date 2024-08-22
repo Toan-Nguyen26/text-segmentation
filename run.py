@@ -110,6 +110,12 @@ def train(model, args, epoch, dataset, logger, optimizer):
                     output = model(data)
                     target_var = Variable(maybe_cuda(torch.cat(target, 0), args.cuda), requires_grad=False)
                     loss = model.criterion(output, target_var)
+
+                     # Check for NaN loss
+                    if torch.isnan(loss):
+                        logger.error(f"Loss is NaN at batch {i}, skipping the batch. Paths: {paths}")
+                        continue
+                    loss.backward()
                     optimizer.step()
                     # total_loss += loss.data[0]
                     total_loss += loss.item()
@@ -126,7 +132,6 @@ def train(model, args, epoch, dataset, logger, optimizer):
                 #     logger.error("Loss became NaN, resetting the model/optimizer or skipping the batch.")
                 #     # Optional: Reset model/optimizer state here
                 #     continue
-                # loss.backward()
 
             # except Exception as e:
             #     logger.info('Exception "%s" in batch %s', e, i)

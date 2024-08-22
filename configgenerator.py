@@ -20,6 +20,14 @@ jsondata = {
       "wikidataset": "./my_datasets/wikidataset",
       "half-wikidataset": "./my_datasets/half-wikidataset",
       "snippets": "./my_datasets/snippets",
+
+    #   "word2vecfile": "./1_20_dataset/GoogleNews-vectors-negative300.bin",
+    #   "wiki-test-50k": "./1_20_dataset/wiki_test_50",
+    #   "wikidataset": "./1_20_dataset/wikidataset",
+    #   "half-wikidataset": "./1_20_dataset/half-wikidataset",
+    #   "snippets": "./1_20_dataset/snippets",
+
+      
 }
 
 with open('config.json', 'w') as f:
